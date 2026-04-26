@@ -11,6 +11,13 @@ on:
         required: false
         type: string
         default: animescheduletelegrambot-ci
+    secrets:
+      TELEGRAM_BOT_TOKEN:
+        required: true
+      TELEGRAM_PUBLIC_WEBHOOK_URL:
+        required: true
+      TELEGRAM_WEBHOOK_SECRET_TOKEN:
+        required: true
 
 jobs:
   build:
@@ -45,3 +52,6 @@ jobs:
         uses: ./.github/actions/docker-health-check
         with:
           image-name: ${{ inputs.image-name }}
+          telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          telegram-public-webhook-url: ${{ secrets.TELEGRAM_PUBLIC_WEBHOOK_URL }}
+          telegram-webhook-secret-token: ${{ secrets.TELEGRAM_WEBHOOK_SECRET_TOKEN }}
