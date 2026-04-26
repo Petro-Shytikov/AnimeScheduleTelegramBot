@@ -1,0 +1,58 @@
+name: Tag Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-build.yml
+    secrets: inherit
+    with:
+      image-name: animescheduletelegrambot-release
+
+  publish:
+    name: Publish Tagged Build
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Validate SemVer tag
+        run: echo "${GITHUB_REF_NAME}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'
+
+      - name: Publish
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          VERSION_CORE="${TAG_VERSION%%[-+]*}"
+          dotnet publish AnimeScheduleTelegramBot.WebService/AnimeScheduleTelegramBot.WebService.csproj --configuration Release --output ./artifacts/publish \
+            -p:Version="$TAG_VERSION" \
+            -p:InformationalVersion="$TAG_VERSION" \
+            -p:FileVersion="$VERSION_CORE.0" \
+            -p:AssemblyVersion="$VERSION_CORE.0"
+
+      - name: Create ZIP package
+        run: cd ./artifacts/publish && zip -r ../AnimeScheduleTelegramBot-${{ github.ref_name }}.zip .
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnimeScheduleTelegramBot-${{ github.ref_name }}
+          path: ./artifacts/AnimeScheduleTelegramBot-${{ github.ref_name }}.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/AnimeScheduleTelegramBot-${{ github.ref_name }}.zip
+          generate_release_notes: true
