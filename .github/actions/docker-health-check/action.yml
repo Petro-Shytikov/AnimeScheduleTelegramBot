@@ -17,6 +17,15 @@ inputs:
     description: Delay between attempts
     required: false
     default: "5"
+  telegram-bot-token:
+    description: Telegram bot token for container environment
+    required: true
+  telegram-public-webhook-url:
+    description: Telegram public webhook URL for container environment
+    required: true
+  telegram-webhook-secret-token:
+    description: Telegram webhook secret token for container environment
+    required: true
 
 runs:
   using: composite
@@ -26,8 +35,26 @@ runs:
       run: |
         set -euo pipefail
 
+        if [ -z "${{ inputs.telegram-bot-token }}" ]; then
+          echo "telegram-bot-token input must not be empty."
+          exit 1
+        fi
+
+        if [ -z "${{ inputs.telegram-public-webhook-url }}" ]; then
+          echo "telegram-public-webhook-url input must not be empty."
+          exit 1
+        fi
+
+        if [ -z "${{ inputs.telegram-webhook-secret-token }}" ]; then
+          echo "telegram-webhook-secret-token input must not be empty."
+          exit 1
+        fi
+
         docker build --tag "${{ inputs.image-name }}" .
         container_id=$(docker run --detach --publish 8080:8080 \
+          --env TELEGRAM_BOT_TOKEN="${{ inputs.telegram-bot-token }}" \
+          --env TELEGRAM_PUBLIC_WEBHOOK_URL="${{ inputs.telegram-public-webhook-url }}" \
+          --env TELEGRAM_WEBHOOK_SECRET_TOKEN="${{ inputs.telegram-webhook-secret-token }}" \
           "${{ inputs.image-name }}")
 
         cleanup() {
