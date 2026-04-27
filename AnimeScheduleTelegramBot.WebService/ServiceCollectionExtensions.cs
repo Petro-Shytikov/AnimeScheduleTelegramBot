@@ -10,31 +10,14 @@ internal static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddAnimeServices(this IServiceCollection services)
 	{
-		services.AddSingleton<RateLimiter>(serviceProvider =>
-		{
-			var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
+		ArgumentNullException.ThrowIfNull(services);
 
-			return new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
-			{
-				PermitLimit = 1,
-				Window = appConfiguration.KitsuMinRequestInterval,
-				QueueLimit = 1,
-				QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-				AutoReplenishment = true
-			});
-		});
+		services.AddSingleton<RateLimiter>(CreateKitsuRateLimiter);
 
 		services.AddTransient<RateLimitedHandler>();
 		services.AddTransient<RetryPolicyHandler>();
 
-		services.AddHttpClient<IKitsuHttpProvider, KitsuHttpProvider>((serviceProvider, client) =>
-		{
-			var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
-
-			client.BaseAddress = HttpHelper.CrateBaseUri(appConfiguration.KitsuBaseUrl);
-			client.DefaultRequestHeaders.Accept.Clear();
-			client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.api+json"));
-		})
+		services.AddHttpClient<IKitsuHttpProvider, KitsuHttpProvider>(ConfigureKitsuHttpClient)
 		.AddHttpMessageHandler<RateLimitedHandler>()
 		.AddHttpMessageHandler<RetryPolicyHandler>();
 
@@ -46,6 +29,8 @@ internal static class ServiceCollectionExtensions
 
 	public static IServiceCollection AddAppConfiguration(this IServiceCollection services)
 	{
+		ArgumentNullException.ThrowIfNull(services);
+
 		services.AddSingleton<IAppConfigurationProvider, AppConfigurationProvider>();
 		services.AddSingleton<IAppConfiguration>(serviceProvider =>
 			serviceProvider.GetRequiredService<IAppConfigurationProvider>().Create());
@@ -55,19 +40,48 @@ internal static class ServiceCollectionExtensions
 
 	public static IServiceCollection AddTelegramBotClient(this IServiceCollection services)
 	{
-		services.AddSingleton<ITelegramBotClient>(serviceProvider =>
-		{
-			var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
-			return new TelegramBotClient(appConfiguration.TelegramBotToken);
-		});
+		ArgumentNullException.ThrowIfNull(services);
+
+		services.AddSingleton<ITelegramBotClient>(CreateTelegramBotClient);
 
 		return services;
 	}
 
 	public static IServiceCollection AddTelegramWebhookInitialization(this IServiceCollection services)
 	{
+		ArgumentNullException.ThrowIfNull(services);
+
 		services.AddHostedService<TelegramWebhookInitializerBackgroundService>();
 
 		return services;
+	}
+
+	private static RateLimiter CreateKitsuRateLimiter(IServiceProvider serviceProvider)
+	{
+		var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
+
+		return new FixedWindowRateLimiter(new FixedWindowRateLimiterOptions
+		{
+			PermitLimit = 1,
+			Window = appConfiguration.KitsuMinRequestInterval,
+			QueueLimit = 1,
+			QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+			AutoReplenishment = true
+		});
+	}
+
+	private static void ConfigureKitsuHttpClient(IServiceProvider serviceProvider, HttpClient client)
+	{
+		var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
+
+		client.BaseAddress = HttpHelper.CrateBaseUri(appConfiguration.KitsuBaseUrl);
+		client.DefaultRequestHeaders.Accept.Clear();
+		client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(HttpHelper.KitsuAcceptMediaType));
+	}
+
+	private static ITelegramBotClient CreateTelegramBotClient(IServiceProvider serviceProvider)
+	{
+		var appConfiguration = serviceProvider.GetRequiredService<IAppConfiguration>();
+		return new TelegramBotClient(appConfiguration.TelegramBotToken);
 	}
 }
