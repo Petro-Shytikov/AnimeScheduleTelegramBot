@@ -5,15 +5,19 @@ namespace AnimeScheduleTelegramBot.WebService.Helpers;
 
 internal static class KitsuHttpErrorsHandlerHelper
 {
-	public static async Task EnsureSuccessStatusCodeAsync(
+	public static async Task<bool> EnsureSuccessStatusCodeAsync(
 		HttpResponseMessage response,
 		ILogger logger,
 		CancellationToken cancellationToken)
 	{
+		ArgumentNullException.ThrowIfNull(response);
+		ArgumentNullException.ThrowIfNull(logger);
+
 		if (response.IsSuccessStatusCode)
-			return;
+			return true;
 
 		await HandleErrorResponseAsync(response, logger, cancellationToken);
+		return false;
 	}
 
 	private static async Task HandleErrorResponseAsync(
@@ -29,13 +33,6 @@ internal static class KitsuHttpErrorsHandlerHelper
 			errorDetails.ErrorCode,
 			errorDetails.ErrorDescription,
 			errorDetails.RawBody);
-
-		throw new HttpRequestException(
-			$"Kitsu API returned non-success status code {(int)response.StatusCode} ({response.StatusCode}). " +
-			$"Error code: {errorDetails.ErrorCode ?? "n/a"}. " +
-			$"Error description: {errorDetails.ErrorDescription ?? "n/a"}.",
-			null,
-			response.StatusCode);
 	}
 
 	private static async Task<ErrorDetails> ParseErrorResponseAsync(
