@@ -10,7 +10,7 @@ public sealed class KitsuHttpProvider(
 {
 	private const string AnimePath = "anime";
 
-	public async Task<IReadOnlyList<AnimeInfo>> GetCurrentSeasonOngoingsAsync(int year, string season, CancellationToken cancellationToken)
+	public async Task<IReadOnlyList<KitsuAnime>> GetCurrentSeasonOngoingsAsync(int year, string season, CancellationToken cancellationToken)
 	{
 		var requestUri = BuildRequestUri(year, season);
 
@@ -24,7 +24,7 @@ public sealed class KitsuHttpProvider(
 
 		return kitsuResponse is null
 			? []
-			: kitsuResponse.Data.Select(MapToAnimeInfo).ToList().AsReadOnly();
+			: kitsuResponse.Data.ToList().AsReadOnly();
 	}
 
 	private static string BuildRequestUri(int year, string season)
@@ -33,15 +33,4 @@ public sealed class KitsuHttpProvider(
 		var encodedSeason = Uri.EscapeDataString(season);
 		return $"{AnimePath}?filter[seasonYear]={encodedYear}&filter[season]={encodedSeason}";
 	}
-
-	private static AnimeInfo MapToAnimeInfo(KitsuAnime anime) =>
-		new(
-			Id: anime.Id,
-			CanonicalTitle: anime.Attributes.CanonicalTitle,
-			EnglishTitle: anime.Attributes.Titles.En,
-			Status: anime.Attributes.Status,
-			Subtype: anime.Attributes.Subtype,
-			StartDate: anime.Attributes.StartDate,
-			EpisodeCount: anime.Attributes.EpisodeCount
-		);
 }
