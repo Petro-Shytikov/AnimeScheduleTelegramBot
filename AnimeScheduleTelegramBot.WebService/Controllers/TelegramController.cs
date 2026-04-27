@@ -3,6 +3,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using AnimeScheduleTelegramBot.WebService.Filters;
 using AnimeScheduleTelegramBot.WebService.Helpers;
+using AnimeScheduleTelegramBot.WebService.Services;
 
 namespace AnimeScheduleTelegramBot.WebService.Controllers;
 
@@ -12,15 +13,18 @@ public sealed class TelegramController : ControllerBase
 {
 	private readonly ITelegramBotClient _botClient;
 	private readonly IAppConfiguration _configuration;
+	private readonly IAnimeProvider _animeProvider;
 	private readonly ILogger<TelegramController> _logger;
 
 	public TelegramController(
 		ITelegramBotClient botClient,
 		IAppConfiguration configuration,
+		IAnimeProvider animeProvider,
 		ILogger<TelegramController> logger)
 	{
 		_botClient = botClient;
 		_configuration = configuration;
+		_animeProvider = animeProvider;
 		_logger = logger;
 	}
 
@@ -31,6 +35,7 @@ public sealed class TelegramController : ControllerBase
 		return await (TelegramBotHelper.TryHandle(update) switch
 		{
 			TelegramBotCommandType.Info => SendInfoMessageAsync(update, cancellationToken),
+			TelegramBotCommandType.Ongoings => SendOngoingsMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.None => SendMessageAsync(update, cancellationToken),
 			_ => SendMessageAsync(update, cancellationToken)
 		});
@@ -41,6 +46,15 @@ public sealed class TelegramController : ControllerBase
 		var chatId = update.Message!.Chat!.Id;
 		var infoText = TelegramBotHelper.BuildInfoReply();
 		await _botClient.SendMessage(chatId, infoText, cancellationToken: cancellationToken);
+		return Ok();
+	}
+
+	private async Task<IActionResult> SendOngoingsMessageAsync(Update update, CancellationToken cancellationToken)
+	{
+		var chatId = update.Message!.Chat!.Id;
+		var ongoings = await _animeProvider.GetCurrentSeasonOngoingsAsync(cancellationToken);
+		var text = TelegramBotHelper.BuildOngoingsReply(ongoings);
+		await _botClient.SendMessage(chatId, text, cancellationToken: cancellationToken);
 		return Ok();
 	}
 

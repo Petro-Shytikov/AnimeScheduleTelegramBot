@@ -17,7 +17,11 @@ public sealed class AppConfigurationProvider : IAppConfigurationProvider
 			telegramBotToken: GetRequiredEnvironmentVariable("TELEGRAM_BOT_TOKEN"),
 			telegramPublicWebhookUrl: GetRequiredEnvironmentVariable("TELEGRAM_PUBLIC_WEBHOOK_URL"),
 			telegramWebhookSecretToken: GetRequiredEnvironmentVariable("TELEGRAM_WEBHOOK_SECRET_TOKEN"),
-			retryTelegramWebhookInitializerDelay: GetRequiredConfigurationValue<TimeSpan>(_configuration, "BotSettings:RetryTelegramWebhookInitializerDelay")
+			retryTelegramWebhookInitializerDelay: GetRequiredConfigurationValue<TimeSpan>(_configuration, "BotSettings:RetryTelegramWebhookInitializerDelay"),
+			kitsuBaseUrl: GetRequiredConfigurationValue<string>(_configuration, "KitsuSettings:BaseUrl"),
+			kitsuMaxRetries: GetRequiredConfigurationValue<int>(_configuration, "KitsuSettings:MaxRetries"),
+			kitsuRetryDelay: GetRequiredConfigurationValue<TimeSpan>(_configuration, "KitsuSettings:RetryDelay"),
+			kitsuMinRequestInterval: GetRequiredConfigurationValue<TimeSpan>(_configuration, "KitsuSettings:MinRequestInterval")
 		);
 
 		Validate(appConfiguration);

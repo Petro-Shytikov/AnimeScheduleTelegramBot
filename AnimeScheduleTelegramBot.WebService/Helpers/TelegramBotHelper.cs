@@ -1,4 +1,5 @@
 using System.Text;
+using AnimeScheduleTelegramBot.WebService.Models;
 using Telegram.Bot.Types;
 
 namespace AnimeScheduleTelegramBot.WebService.Helpers;
@@ -19,6 +20,7 @@ public static class TelegramBotHelper
 		return command switch
 		{
 			"/info" => TelegramBotCommandType.Info,
+			"/ongoings" => TelegramBotCommandType.Ongoings,
 			_ => TelegramBotCommandType.Unknown
 		};
 	}
@@ -27,4 +29,19 @@ public static class TelegramBotHelper
 	new StringBuilder()
 		.AppendLine($"Service Version: {CommonHelper.ServiceVersion}")
 		.ToString();
+
+	public static string BuildOngoingsReply(IReadOnlyList<AnimeInfo> ongoings)
+	{
+		if (ongoings.Count == 0)
+			return "No ongoing anime found for the current season.";
+
+		var sb = new StringBuilder();
+		sb.AppendLine("Current season ongoings:");
+		for (var i = 0; i < ongoings.Count; i++)
+		{
+			var title = ongoings[i].EnglishTitle ?? ongoings[i].CanonicalTitle;
+			sb.AppendLine($"{i + 1}. {title}");
+		}
+		return sb.ToString();
+	}
 }
