@@ -19,7 +19,13 @@ public sealed class KitsuHttpProvider(
 		using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
 		using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-		await KitsuHttpErrorsHandlerHelper.EnsureSuccessStatusCodeAsync(response, logger, cancellationToken);
+		var isSuccessfulResponse = await KitsuHttpErrorsHandlerHelper.EnsureSuccessStatusCodeAsync(response, logger, cancellationToken);
+		if (!isSuccessfulResponse)
+		{
+			logger.LogWarning("Returning empty Kitsu response due to upstream API failure. RequestUri: {RequestUri}", requestUri);
+			return [];
+		}
+
 		var kitsuResponse = await response.Content.ReadFromJsonAsync<KitsuApiResponse>(cancellationToken);
 
 		return kitsuResponse is null
