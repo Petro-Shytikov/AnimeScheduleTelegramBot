@@ -4,4 +4,8 @@ public interface IAppConfiguration
 	string TelegramPublicWebhookUrl { get; }
 	string TelegramWebhookSecretToken { get; }
 	TimeSpan RetryTelegramWebhookInitializerDelay { get; }
+	string KitsuBaseUrl { get; }
+	int KitsuMaxRetries { get; }
+	TimeSpan KitsuRetryDelay { get; }
+	TimeSpan KitsuMinRequestInterval { get; }
 }

@@ -6,12 +6,20 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 		string telegramBotToken,
 		string telegramPublicWebhookUrl,
 		string telegramWebhookSecretToken,
-		TimeSpan retryTelegramWebhookInitializerDelay)
+		TimeSpan retryTelegramWebhookInitializerDelay,
+		string kitsuBaseUrl,
+		int kitsuMaxRetries,
+		TimeSpan kitsuRetryDelay,
+		TimeSpan kitsuMinRequestInterval)
     {
         TelegramBotToken = telegramBotToken;
         TelegramPublicWebhookUrl = telegramPublicWebhookUrl;
         TelegramWebhookSecretToken = telegramWebhookSecretToken;
 		RetryTelegramWebhookInitializerDelay = retryTelegramWebhookInitializerDelay;
+		KitsuBaseUrl = kitsuBaseUrl;
+		KitsuMaxRetries = kitsuMaxRetries;
+		KitsuRetryDelay = kitsuRetryDelay;
+		KitsuMinRequestInterval = kitsuMinRequestInterval;
     }
 
 	[Required]
@@ -25,6 +33,18 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 
 	[Required]
 	public TimeSpan RetryTelegramWebhookInitializerDelay { get; }
+
+	[Required]
+	public string KitsuBaseUrl { get; }
+
+	[Required]
+	public int KitsuMaxRetries { get; }
+
+	[Required]
+	public TimeSpan KitsuRetryDelay { get; }
+
+	[Required]
+	public TimeSpan KitsuMinRequestInterval { get; }
 
 
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -55,6 +75,40 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 			yield return CreateValidationResult(
 				$"{nameof(RetryTelegramWebhookInitializerDelay)} must be greater than zero.",
 				nameof(RetryTelegramWebhookInitializerDelay));
+		}
+
+		if (string.IsNullOrWhiteSpace(KitsuBaseUrl))
+		{
+			yield return CreateValidationResult(
+				$"{nameof(KitsuBaseUrl)} must not be empty or whitespace.",
+				nameof(KitsuBaseUrl));
+		}
+		else if (!Uri.TryCreate(KitsuBaseUrl, UriKind.Absolute, out _))
+		{
+			yield return CreateValidationResult(
+				$"{nameof(KitsuBaseUrl)} must be an absolute URI.",
+				nameof(KitsuBaseUrl));
+		}
+
+		if (KitsuMaxRetries <= 0)
+		{
+			yield return CreateValidationResult(
+				$"{nameof(KitsuMaxRetries)} must be greater than zero.",
+				nameof(KitsuMaxRetries));
+		}
+
+		if (KitsuRetryDelay <= TimeSpan.Zero)
+		{
+			yield return CreateValidationResult(
+				$"{nameof(KitsuRetryDelay)} must be greater than zero.",
+				nameof(KitsuRetryDelay));
+		}
+
+		if (KitsuMinRequestInterval <= TimeSpan.Zero)
+		{
+			yield return CreateValidationResult(
+				$"{nameof(KitsuMinRequestInterval)} must be greater than zero.",
+				nameof(KitsuMinRequestInterval));
 		}
 	}
 

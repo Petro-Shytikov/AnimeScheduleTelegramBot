@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 builder.Services.AddAppConfiguration();
+builder.Services.AddAnimeServices();
 builder.Services.AddSingleton<ValidateTelegramSecretFilter>();
 builder.Services.AddTelegramBotClient();
 builder.Services.AddTelegramWebhookInitialization();
