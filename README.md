@@ -84,6 +84,25 @@ dotnet run --project AnimeScheduleTelegramBot.WebService/AnimeScheduleTelegramBo
 dotnet build AnimeScheduleTelegramBot.WebService/AnimeScheduleTelegramBot.WebService.csproj
 ```
 
+## Unit Tests
+
+Run all tests:
+
+```bash
+dotnet test
+```
+
+Run tests exactly as CI does:
+
+```bash
+dotnet restore
+dotnet test --solution AnimeScheduleTelegramBot.slnx --no-restore --configuration Release
+```
+
+Test project location:
+- `AnimeScheduleTelegramBot.Tests`
+
+
 ## Docker
 
 Build image:

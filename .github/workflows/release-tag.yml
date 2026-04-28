@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/reusable-build.yml
+    uses: ./.github/workflows/build-template.yml
     secrets: inherit
     with:
       image-name: animescheduletelegrambot-release
