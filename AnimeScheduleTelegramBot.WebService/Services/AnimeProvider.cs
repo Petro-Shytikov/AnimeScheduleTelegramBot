@@ -1,30 +1,17 @@
 using AnimeScheduleTelegramBot.WebService.Models;
-using AnimeScheduleTelegramBot.WebService.Services.Kitsu;
 
 namespace AnimeScheduleTelegramBot.WebService.Services;
 
-public sealed class AnimeProvider(IKitsuHttpProvider kitsuHttpProvider) : IAnimeProvider
+public sealed class AnimeProvider(
+	CacheService<KitsuAnime, (int Year, string Season)> cacheService) : IAnimeProvider
 {
 	public async Task<IReadOnlyList<AnimeInfo>> GetCurrentSeasonOngoingsAsync(CancellationToken cancellationToken)
 	{
-		var (year, season) = GetCurrentSeason();
-		var ongoings = await kitsuHttpProvider.GetCurrentSeasonOngoingsAsync(year, season, cancellationToken);
-
-		return ongoings.Select(MapToAnimeInfo).ToList().AsReadOnly();
+		var loadedOngoings = await cacheService.GetAsync(GetCurrentSeason(), forceRefresh: false, cancellationToken);
+		return MapToAnimeInfoList(loadedOngoings);
 	}
 
-	private static AnimeInfo MapToAnimeInfo(KitsuAnime anime) =>
-		new(
-			Id: anime.Id,
-			CanonicalTitle: anime.Attributes.CanonicalTitle,
-			EnglishTitle: anime.Attributes.Titles.En,
-			Status: anime.Attributes.Status,
-			Subtype: anime.Attributes.Subtype,
-			StartDate: anime.Attributes.StartDate,
-			EpisodeCount: anime.Attributes.EpisodeCount
-		);
-
-	private static (int Year, string Season) GetCurrentSeason()
+	internal static (int Year, string Season) GetCurrentSeason()
 	{
 		var now = DateTime.UtcNow;
 		var season = now.Month switch
@@ -37,4 +24,18 @@ public sealed class AnimeProvider(IKitsuHttpProvider kitsuHttpProvider) : IAnime
 
 		return (now.Year, season);
 	}
+
+	private static IReadOnlyList<AnimeInfo> MapToAnimeInfoList(IReadOnlyList<KitsuAnime> animes) =>
+		animes.Select(MapToAnimeInfo).ToList().AsReadOnly();
+
+	private static AnimeInfo MapToAnimeInfo(KitsuAnime anime) =>
+		new(
+			Id: anime.Id,
+			CanonicalTitle: anime.Attributes.CanonicalTitle,
+			EnglishTitle: anime.Attributes.Titles.En,
+			Status: anime.Attributes.Status,
+			Subtype: anime.Attributes.Subtype,
+			StartDate: anime.Attributes.StartDate,
+			EpisodeCount: anime.Attributes.EpisodeCount
+		);
 }

@@ -13,6 +13,7 @@ Current implemented commands:
 - Telegram.Bot
 - HttpClientFactory + delegating handlers
 - Polly retry policy
+- `IMemoryCache` for in-process anime caching
 
 ## HTTP Pipeline
 
@@ -45,7 +46,10 @@ The typed client for `IKitsuHttpProvider` sets:
 - `RetryDelay` (TimeSpan > 0)
 - `MinRequestInterval` (TimeSpan > 0)
 
-`appsettings.Development.json` can override `KitsuSettings:BaseUrl` for local/mock development.
+`AnimeSettings`:
+- `CacheLifetime` (TimeSpan > 0, default `1.00:00:00` — 24 hours)
+
+`appsettings.Development.json` can override any of the above for local/mock development.
 
 ## API Endpoints
 

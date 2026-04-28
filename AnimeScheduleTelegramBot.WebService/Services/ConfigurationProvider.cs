@@ -21,7 +21,8 @@ public sealed class AppConfigurationProvider : IAppConfigurationProvider
 			kitsuBaseUrl: GetRequiredConfigurationValue<string>(_configuration, "KitsuSettings:BaseUrl"),
 			kitsuMaxRetries: GetRequiredConfigurationValue<int>(_configuration, "KitsuSettings:MaxRetries"),
 			kitsuRetryDelay: GetRequiredConfigurationValue<TimeSpan>(_configuration, "KitsuSettings:RetryDelay"),
-			kitsuMinRequestInterval: GetRequiredConfigurationValue<TimeSpan>(_configuration, "KitsuSettings:MinRequestInterval")
+			kitsuMinRequestInterval: GetRequiredConfigurationValue<TimeSpan>(_configuration, "KitsuSettings:MinRequestInterval"),
+			animeCacheLifetime: GetRequiredConfigurationValue<TimeSpan>(_configuration, "AnimeSettings:CacheLifetime")
 		);
 
 		Validate(appConfiguration);

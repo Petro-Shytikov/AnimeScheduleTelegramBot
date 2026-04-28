@@ -8,4 +8,5 @@ public interface IAppConfiguration
 	int KitsuMaxRetries { get; }
 	TimeSpan KitsuRetryDelay { get; }
 	TimeSpan KitsuMinRequestInterval { get; }
+	TimeSpan AnimeCacheLifetime { get; }
 }

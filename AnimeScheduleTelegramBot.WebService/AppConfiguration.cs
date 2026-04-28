@@ -10,7 +10,8 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 		string kitsuBaseUrl,
 		int kitsuMaxRetries,
 		TimeSpan kitsuRetryDelay,
-		TimeSpan kitsuMinRequestInterval)
+		TimeSpan kitsuMinRequestInterval,
+		TimeSpan animeCacheLifetime)
     {
         TelegramBotToken = telegramBotToken;
         TelegramPublicWebhookUrl = telegramPublicWebhookUrl;
@@ -20,6 +21,7 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 		KitsuMaxRetries = kitsuMaxRetries;
 		KitsuRetryDelay = kitsuRetryDelay;
 		KitsuMinRequestInterval = kitsuMinRequestInterval;
+		AnimeCacheLifetime = animeCacheLifetime;
     }
 
 	[Required]
@@ -45,6 +47,9 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 
 	[Required]
 	public TimeSpan KitsuMinRequestInterval { get; }
+
+	[Required]
+	public TimeSpan AnimeCacheLifetime { get; }
 
 
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -109,6 +114,13 @@ public sealed class AppConfiguration : IAppConfiguration, IValidatableObject
 			yield return CreateValidationResult(
 				$"{nameof(KitsuMinRequestInterval)} must be greater than zero.",
 				nameof(KitsuMinRequestInterval));
+		}
+
+		if (AnimeCacheLifetime <= TimeSpan.Zero)
+		{
+			yield return CreateValidationResult(
+				$"{nameof(AnimeCacheLifetime)} must be greater than zero.",
+				nameof(AnimeCacheLifetime));
 		}
 	}
 
