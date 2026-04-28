@@ -22,6 +22,9 @@ public static class TelegramBotHelper
 			"/info" => TelegramBotCommandType.Info,
 			"/ongoings" => TelegramBotCommandType.Ongoings,
 			"/week" => TelegramBotCommandType.Week,
+			"/yesterday" => TelegramBotCommandType.Yesterday,
+			"/today" => TelegramBotCommandType.Today,
+			"/tomorrow" => TelegramBotCommandType.Tomorrow,
 			_ => TelegramBotCommandType.Unknown
 		};
 	}
@@ -126,6 +129,33 @@ public static class TelegramBotHelper
 		}
 
 		return replies.AsReadOnly();
+	}
+
+	public static string BuildSingleDayReply(DateOnly date, IReadOnlyList<AnimeWeekEpisodeInfo> daySchedule)
+	{
+		if (daySchedule.Count == 0)
+			return $"No episodes scheduled for {date:dddd} (UTC).";
+
+		var sb = new StringBuilder();
+		sb.AppendLine($"{date:dddd}:");
+
+		var orderedDaySchedule = daySchedule
+			.OrderBy(item => item.AnimeTitle)
+			.ThenBy(item => item.EpisodeNumber ?? int.MaxValue)
+			.ToList();
+
+		for (var i = 0; i < orderedDaySchedule.Count; i++)
+		{
+			var episode = orderedDaySchedule[i];
+			var episodeNumber = episode.EpisodeNumber?.ToString() ?? "?";
+			var episodeTitle = string.IsNullOrWhiteSpace(episode.EpisodeTitle)
+				? string.Empty
+				: $" {episode.EpisodeTitle}";
+
+			sb.AppendLine($"{i + 1}. {episode.AnimeTitle} - {episodeNumber}{episodeTitle}");
+		}
+
+		return sb.ToString();
 	}
 
 	private static DateOnly GetCurrentWeekStart(DateOnly utcDate)

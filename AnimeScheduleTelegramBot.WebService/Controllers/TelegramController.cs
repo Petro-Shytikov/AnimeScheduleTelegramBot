@@ -37,6 +37,9 @@ public sealed class TelegramController : ControllerBase
 			TelegramBotCommandType.Info => SendInfoMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.Ongoings => SendOngoingsMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.Week => SendWeekMessageAsync(update, cancellationToken),
+			TelegramBotCommandType.Yesterday => SendYesterdayMessageAsync(update, cancellationToken),
+			TelegramBotCommandType.Today => SendTodayMessageAsync(update, cancellationToken),
+			TelegramBotCommandType.Tomorrow => SendTomorrowMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.None => SendMessageAsync(update, cancellationToken),
 			_ => SendMessageAsync(update, cancellationToken)
 		});
@@ -70,6 +73,36 @@ public sealed class TelegramController : ControllerBase
 			await _botClient.SendMessage(chatId, message, cancellationToken: cancellationToken);
 		}
 
+		return Ok();
+	}
+
+	private async Task<IActionResult> SendYesterdayMessageAsync(Update update, CancellationToken cancellationToken)
+	{
+		var chatId = update.Message!.Chat!.Id;
+		var schedule = await _animeProvider.GetYesterdayScheduleAsync(cancellationToken);
+		var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+		var text = TelegramBotHelper.BuildSingleDayReply(date, schedule);
+		await _botClient.SendMessage(chatId, text, cancellationToken: cancellationToken);
+		return Ok();
+	}
+
+	private async Task<IActionResult> SendTodayMessageAsync(Update update, CancellationToken cancellationToken)
+	{
+		var chatId = update.Message!.Chat!.Id;
+		var schedule = await _animeProvider.GetTodayScheduleAsync(cancellationToken);
+		var date = DateOnly.FromDateTime(DateTime.UtcNow);
+		var text = TelegramBotHelper.BuildSingleDayReply(date, schedule);
+		await _botClient.SendMessage(chatId, text, cancellationToken: cancellationToken);
+		return Ok();
+	}
+
+	private async Task<IActionResult> SendTomorrowMessageAsync(Update update, CancellationToken cancellationToken)
+	{
+		var chatId = update.Message!.Chat!.Id;
+		var schedule = await _animeProvider.GetTomorrowScheduleAsync(cancellationToken);
+		var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+		var text = TelegramBotHelper.BuildSingleDayReply(date, schedule);
+		await _botClient.SendMessage(chatId, text, cancellationToken: cancellationToken);
 		return Ok();
 	}
 

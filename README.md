@@ -5,7 +5,10 @@ ASP.NET web service for a Telegram bot that returns anime information.
 Current implemented commands:
 - `/info` - returns service version.
 - `/ongoings` - returns current season ongoing anime titles.
-- `/week` - returns current week episode schedule grouped by day (UTC).
+- `/week` - returns current week episode schedule as separate messages per weekday (UTC), skipping days without episodes.
+- `/yesterday` - returns yesterday episode schedule (UTC).
+- `/today` - returns today episode schedule (UTC).
+- `/tomorrow` - returns tomorrow episode schedule (UTC).
 
 ## Tech Stack
 
@@ -27,6 +30,13 @@ The typed client for `IKitsuHttpProvider` sets:
 
 - `BaseAddress` from `KitsuSettings:BaseUrl`.
 - `Accept: application/vnd.api+json`.
+
+## Schedule Behavior
+
+- `/week` sends one message per weekday in Monday-Sunday order.
+- Weekday messages are sent only for days that actually contain episodes.
+- `/yesterday`, `/today`, and `/tomorrow` each send a single day-specific message.
+- If no episodes are found for a requested period/day, the bot sends an explicit no-data message.
 
 ## Configuration
 

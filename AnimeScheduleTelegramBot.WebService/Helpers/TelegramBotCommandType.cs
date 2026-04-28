@@ -6,5 +6,8 @@ public enum TelegramBotCommandType
 	Info,
 	Ongoings,
 	Week,
+	Yesterday,
+	Today,
+	Tomorrow,
 	Unknown
 }
