@@ -36,6 +36,7 @@ public sealed class TelegramController : ControllerBase
 		{
 			TelegramBotCommandType.Info => SendInfoMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.Ongoings => SendOngoingsMessageAsync(update, cancellationToken),
+			TelegramBotCommandType.Week => SendWeekMessageAsync(update, cancellationToken),
 			TelegramBotCommandType.None => SendMessageAsync(update, cancellationToken),
 			_ => SendMessageAsync(update, cancellationToken)
 		});
@@ -55,6 +56,20 @@ public sealed class TelegramController : ControllerBase
 		var ongoings = await _animeProvider.GetCurrentSeasonOngoingsAsync(cancellationToken);
 		var text = TelegramBotHelper.BuildOngoingsReply(ongoings);
 		await _botClient.SendMessage(chatId, text, cancellationToken: cancellationToken);
+		return Ok();
+	}
+
+	private async Task<IActionResult> SendWeekMessageAsync(Update update, CancellationToken cancellationToken)
+	{
+		var chatId = update.Message!.Chat!.Id;
+		var weekSchedule = await _animeProvider.GetCurrentWeekScheduleAsync(cancellationToken);
+		var messages = TelegramBotHelper.BuildWeekDayReplies(weekSchedule);
+
+		foreach (var message in messages)
+		{
+			await _botClient.SendMessage(chatId, message, cancellationToken: cancellationToken);
+		}
+
 		return Ok();
 	}
 

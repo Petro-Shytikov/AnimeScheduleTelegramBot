@@ -26,6 +26,9 @@ internal static class ServiceCollectionExtensions
 		services.AddSingleton<ICacheSourceProvider<KitsuAnime, (int Year, string Season)>, KitsuCurrentSeasonAnimeSourceProvider>();
 		services.AddSingleton<CacheSignal<KitsuAnime>>();
 		services.AddSingleton<CacheService<KitsuAnime, (int Year, string Season)>>();
+		services.AddSingleton<ICacheSourceProvider<AnimeWeekEpisodeInfo, AnimeWeekScheduleContext>, KitsuCurrentWeekScheduleSourceProvider>();
+		services.AddSingleton<CacheSignal<AnimeWeekEpisodeInfo>>();
+		services.AddSingleton<CacheService<AnimeWeekEpisodeInfo, AnimeWeekScheduleContext>>();
 		services.AddSingleton<AnimeProvider>();
 		services.AddSingleton<IAnimeProvider>(serviceProvider => serviceProvider.GetRequiredService<AnimeProvider>());
 
