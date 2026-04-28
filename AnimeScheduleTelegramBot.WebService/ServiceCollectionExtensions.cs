@@ -1,6 +1,7 @@
 using Telegram.Bot;
 using AnimeScheduleTelegramBot.WebService.HttpClientHandlers;
 using AnimeScheduleTelegramBot.WebService.Helpers;
+using AnimeScheduleTelegramBot.WebService.Models;
 using AnimeScheduleTelegramBot.WebService.Services;
 using AnimeScheduleTelegramBot.WebService.Services.Kitsu;
 using System.Net.Http.Headers;
@@ -12,6 +13,7 @@ internal static class ServiceCollectionExtensions
 	{
 		ArgumentNullException.ThrowIfNull(services);
 
+		services.AddMemoryCache();
 		services.AddSingleton<RateLimiter>(CreateKitsuRateLimiter);
 
 		services.AddTransient<RateLimitedHandler>();
@@ -21,7 +23,11 @@ internal static class ServiceCollectionExtensions
 		.AddHttpMessageHandler<RateLimitedHandler>()
 		.AddHttpMessageHandler<RetryPolicyHandler>();
 
-		services.AddTransient<IAnimeProvider, AnimeProvider>();
+		services.AddSingleton<ICacheSourceProvider<KitsuAnime, (int Year, string Season)>, KitsuCurrentSeasonAnimeSourceProvider>();
+		services.AddSingleton<CacheSignal<KitsuAnime>>();
+		services.AddSingleton<CacheService<KitsuAnime, (int Year, string Season)>>();
+		services.AddSingleton<AnimeProvider>();
+		services.AddSingleton<IAnimeProvider>(serviceProvider => serviceProvider.GetRequiredService<AnimeProvider>());
 
 		return services;
 	}
