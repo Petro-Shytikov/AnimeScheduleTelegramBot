@@ -21,6 +21,7 @@ public static class TelegramBotHelper
 		{
 			"/info" => TelegramBotCommandType.Info,
 			"/ongoings" => TelegramBotCommandType.Ongoings,
+			"/week" => TelegramBotCommandType.Week,
 			_ => TelegramBotCommandType.Unknown
 		};
 	}
@@ -43,5 +44,93 @@ public static class TelegramBotHelper
 			sb.AppendLine($"{i + 1}. {title}");
 		}
 		return sb.ToString();
+	}
+
+	public static string BuildWeekReply(IReadOnlyList<AnimeWeekEpisodeInfo> weekSchedule)
+	{
+		if (weekSchedule.Count == 0)
+			return "No episodes scheduled for the current week.";
+
+		var sb = new StringBuilder();
+		sb.AppendLine("Current week episodes (UTC):");
+
+		var orderedSchedule = weekSchedule
+			.OrderBy(item => item.AirDate)
+			.ThenBy(item => item.AnimeTitle)
+			.ThenBy(item => item.EpisodeNumber ?? int.MaxValue)
+			.ToList();
+
+		var groupedByDate = orderedSchedule.GroupBy(item => item.AirDate);
+		foreach (var dateGroup in groupedByDate)
+		{
+			sb.AppendLine();
+			sb.AppendLine($"{dateGroup.Key:dddd, MMM dd}:");
+
+			foreach (var episode in dateGroup)
+			{
+				var episodeNumberPart = episode.EpisodeNumber is null
+					? "Ep ?"
+					: $"Ep {episode.EpisodeNumber}";
+
+				var episodeTitlePart = string.IsNullOrWhiteSpace(episode.EpisodeTitle)
+					? string.Empty
+					: $" - {episode.EpisodeTitle}";
+
+				sb.AppendLine($"- {episode.AnimeTitle} ({episodeNumberPart}){episodeTitlePart}");
+			}
+		}
+
+		return sb.ToString();
+	}
+
+	public static IReadOnlyList<string> BuildWeekDayReplies(IReadOnlyList<AnimeWeekEpisodeInfo> weekSchedule)
+	{
+		if (weekSchedule.Count == 0)
+			return ["No episodes scheduled for the current week."];
+
+		var currentUtcDate = DateOnly.FromDateTime(DateTime.UtcNow);
+		var weekStart = GetCurrentWeekStart(currentUtcDate);
+
+		var episodesByDate = weekSchedule
+			.OrderBy(item => item.AnimeTitle)
+			.ThenBy(item => item.EpisodeNumber ?? int.MaxValue)
+			.GroupBy(item => item.AirDate)
+			.ToDictionary(group => group.Key, group => group.ToList());
+
+		var replies = new List<string>();
+
+		for (var dayOffset = 0; dayOffset < 7; dayOffset++)
+		{
+			var dayDate = weekStart.AddDays(dayOffset);
+			if (!episodesByDate.TryGetValue(dayDate, out var dayEpisodes))
+				continue;
+
+			if (dayEpisodes is null || dayEpisodes.Count == 0)
+				continue;
+
+			var sb = new StringBuilder();
+			sb.AppendLine($"{dayDate.DayOfWeek}:");
+
+			for (var i = 0; i < dayEpisodes.Count; i++)
+			{
+				var episode = dayEpisodes[i];
+				var episodeNumber = episode.EpisodeNumber?.ToString() ?? "?";
+				var episodeTitle = string.IsNullOrWhiteSpace(episode.EpisodeTitle)
+					? string.Empty
+					: $" {episode.EpisodeTitle}";
+
+				sb.AppendLine($"{i + 1}. {episode.AnimeTitle} - {episodeNumber}{episodeTitle}");
+			}
+
+			replies.Add(sb.ToString());
+		}
+
+		return replies.AsReadOnly();
+	}
+
+	private static DateOnly GetCurrentWeekStart(DateOnly utcDate)
+	{
+		var dayOffset = ((int)utcDate.DayOfWeek + 6) % 7;
+		return utcDate.AddDays(-dayOffset);
 	}
 }

@@ -5,6 +5,7 @@ ASP.NET web service for a Telegram bot that returns anime information.
 Current implemented commands:
 - `/info` - returns service version.
 - `/ongoings` - returns current season ongoing anime titles.
+- `/week` - returns current week episode schedule grouped by day (UTC).
 
 ## Tech Stack
 
