@@ -37,7 +37,7 @@ public class CacheSignalTests
 			using var cancellationTokenSource = new CancellationTokenSource();
 			var waitTask = signal.WaitAsync(cancellationTokenSource.Token);
 
-			Assert.That(waitTask.IsCompleted, Is.False);
+			await Assert.That(waitTask.IsCompleted).IsFalse();
 
 			cancellationTokenSource.Cancel();
 
