@@ -26,28 +26,10 @@ public sealed class AnimeProvider(
 		return await weekScheduleCacheService.GetAsync(context, forceRefresh: false, cancellationToken);
 	}
 
-	public Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetYesterdayScheduleAsync(CancellationToken cancellationToken)
-	{
-		var targetDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-		return GetScheduleForDateAsync(targetDate, cancellationToken);
-	}
-
-	public Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetTodayScheduleAsync(CancellationToken cancellationToken)
-	{
-		var targetDate = DateOnly.FromDateTime(DateTime.UtcNow);
-		return GetScheduleForDateAsync(targetDate, cancellationToken);
-	}
-
-	public Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetTomorrowScheduleAsync(CancellationToken cancellationToken)
-	{
-		var targetDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
-		return GetScheduleForDateAsync(targetDate, cancellationToken);
-	}
-
 	internal static (int Year, string Season) GetCurrentSeason() =>
 		GetSeason(DateTime.UtcNow);
 
-	private async Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetScheduleForDateAsync(DateOnly targetDate, CancellationToken cancellationToken)
+	public async Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetScheduleForDateAsync(DateOnly targetDate, CancellationToken cancellationToken)
 	{
 		var weekRange = GetCurrentWeekRange(targetDate);
 		var (year, season) = GetSeason(targetDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
