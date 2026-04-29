@@ -9,7 +9,8 @@ public sealed class CacheSignal<T>
 	/// When signaled (consumer calls <see cref="Release"/>), the
 	/// <see cref="Task.Status"/> is set as <see cref="TaskStatus.RanToCompletion"/>.
 	/// </summary>
-	public Task WaitAsync() => _semaphore.WaitAsync();
+	public Task WaitAsync(CancellationToken cancellationToken = default) =>
+		_semaphore.WaitAsync(cancellationToken);
 
 	/// <summary>
 	/// Exposes the ability to signal the release of the <see cref="WaitAsync"/>'s operation.

@@ -20,7 +20,7 @@ public sealed class CacheService<T, TContext>(
 				return cachedItems;
 		}
 
-		await refreshSignal.WaitAsync().WaitAsync(cancellationToken);
+		await refreshSignal.WaitAsync(cancellationToken);
 		try
 		{
 			cacheKey = sourceProvider.GetCacheKey(context);
