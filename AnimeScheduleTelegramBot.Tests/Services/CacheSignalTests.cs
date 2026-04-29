@@ -32,10 +32,21 @@ public class CacheSignalTests
 		var signal = new CacheSignal<int>();
 		await signal.WaitAsync(CancellationToken.None);
 
-		using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-		await Assert.ThrowsAsync<OperationCanceledException>(async () =>
-			await signal.WaitAsync(cancellationTokenSource.Token));
+		try
+		{
+			using var cancellationTokenSource = new CancellationTokenSource();
+			var waitTask = signal.WaitAsync(cancellationTokenSource.Token);
 
-		signal.Release();
+			Assert.That(waitTask.IsCompleted, Is.False);
+
+			cancellationTokenSource.Cancel();
+
+			await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+				await waitTask);
+		}
+		finally
+		{
+			signal.Release();
+		}
 	}
 }
