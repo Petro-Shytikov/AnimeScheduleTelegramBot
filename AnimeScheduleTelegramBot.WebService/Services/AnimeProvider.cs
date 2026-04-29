@@ -1,4 +1,5 @@
 using AnimeScheduleTelegramBot.WebService.Models;
+using AnimeScheduleTelegramBot.WebService.Helpers;
 
 namespace AnimeScheduleTelegramBot.WebService.Services;
 
@@ -8,31 +9,26 @@ public sealed class AnimeProvider(
 {
 	public async Task<IReadOnlyList<AnimeInfo>> GetCurrentSeasonOngoingsAsync(CancellationToken cancellationToken)
 	{
-		var loadedOngoings = await cacheService.GetAsync(GetSeason(DateTime.UtcNow), forceRefresh: false, cancellationToken);
+		var loadedOngoings = await cacheService.GetAsync(CommonHelper.GetSeason(DateOnly.FromDateTime(DateTime.UtcNow)), forceRefresh: false, cancellationToken);
 		return MapToAnimeInfoList(loadedOngoings);
 	}
 
-	public async Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetCurrentWeekScheduleAsync(CancellationToken cancellationToken)
+	public async Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetCurrentWeekScheduleAsync(DateOnly weekStartDay, DateOnly weekEndDay, CancellationToken cancellationToken)
 	{
-		var utcToday = DateOnly.FromDateTime(DateTime.UtcNow);
-		var weekRange = GetCurrentWeekRange(utcToday);
-		var (year, season) = GetSeason(utcToday.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
+		var (year, season) = CommonHelper.GetSeason(weekStartDay);
 		var context = new AnimeWeekScheduleContext(
 			Year: year,
 			Season: season,
-			WeekStart: weekRange.Start,
-			WeekEnd: weekRange.End);
+			WeekStart: weekStartDay,
+			WeekEnd: weekEndDay);
 
 		return await weekScheduleCacheService.GetAsync(context, forceRefresh: false, cancellationToken);
 	}
 
-	internal static (int Year, string Season) GetCurrentSeason() =>
-		GetSeason(DateTime.UtcNow);
-
 	public async Task<IReadOnlyList<AnimeWeekEpisodeInfo>> GetScheduleForDateAsync(DateOnly targetDate, CancellationToken cancellationToken)
 	{
-		var weekRange = GetCurrentWeekRange(targetDate);
-		var (year, season) = GetSeason(targetDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
+		var weekRange = CommonHelper.GetCurrentWeekRange(targetDate);
+		var (year, season) = CommonHelper.GetSeason(targetDate);
 		var context = new AnimeWeekScheduleContext(
 			Year: year,
 			Season: season,
@@ -43,29 +39,8 @@ public sealed class AnimeProvider(
 		return weekSchedule.Where(item => item.AirDate == targetDate).ToList().AsReadOnly();
 	}
 
-	private static (int Year, string Season) GetSeason(DateTime utcDate)
-	{
-		var season = utcDate.Month switch
-		{
-			>= 3 and <= 5 => "spring",
-			>= 6 and <= 8 => "summer",
-			>= 9 and <= 11 => "fall",
-			_ => "winter"
-		};
-
-		return (utcDate.Year, season);
-	}
-
 	private static IReadOnlyList<AnimeInfo> MapToAnimeInfoList(IReadOnlyList<KitsuAnime> animes) =>
 		animes.Select(MapToAnimeInfo).ToList().AsReadOnly();
-
-	private static (DateOnly Start, DateOnly End) GetCurrentWeekRange(DateOnly utcDate)
-	{
-		var dayOffset = ((int)utcDate.DayOfWeek + 6) % 7;
-		var weekStart = utcDate.AddDays(-dayOffset);
-		var weekEnd = weekStart.AddDays(6);
-		return (weekStart, weekEnd);
-	}
 
 	private static AnimeInfo MapToAnimeInfo(KitsuAnime anime) =>
 		new(

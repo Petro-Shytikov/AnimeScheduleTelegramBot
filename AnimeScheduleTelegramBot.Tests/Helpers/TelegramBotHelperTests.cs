@@ -293,7 +293,8 @@ public class TelegramBotHelperTests
 	[Test]
 	public async Task BuildWeekDayReplies_WithEmptyList_ReturnsSingleNoScheduleMessage()
 	{
-		var result = TelegramBotHelper.BuildWeekDayReplies([]);
+		var weekStart = new DateOnly(2025, 1, 6);
+		var result = TelegramBotHelper.BuildWeekDayReplies([], weekStart);
 
 		await Assert.That(result.Count).IsEqualTo(1);
 		await Assert.That(result[0]).IsEqualTo("No episodes scheduled for the current week.");
@@ -302,10 +303,10 @@ public class TelegramBotHelperTests
 	[Test]
 	public async Task BuildWeekDayReplies_WithEpisodeInCurrentWeek_ReturnsReplyContainingAnimeTitle()
 	{
-		var today = DateOnly.FromDateTime(DateTime.UtcNow);
-		var episode = new AnimeWeekEpisodeInfo("1", "Anime A", 1, null, today);
+		var weekStart = new DateOnly(2025, 1, 6);
+		var episode = new AnimeWeekEpisodeInfo("1", "Anime A", 1, null, weekStart);
 
-		var result = TelegramBotHelper.BuildWeekDayReplies([episode]);
+		var result = TelegramBotHelper.BuildWeekDayReplies([episode], weekStart);
 
 		await Assert.That(result.Count).IsEqualTo(1);
 		await Assert.That(result[0]).Contains("Anime A");
@@ -314,9 +315,7 @@ public class TelegramBotHelperTests
 	[Test]
 	public async Task BuildWeekDayReplies_WithEpisodesOnTwoDaysInCurrentWeek_ReturnsTwoReplies()
 	{
-		var today = DateOnly.FromDateTime(DateTime.UtcNow);
-		var dayOffset = ((int)today.DayOfWeek + 6) % 7;
-		var weekStart = today.AddDays(-dayOffset); // Monday of current ISO week
+		var weekStart = new DateOnly(2025, 1, 6);
 
 		var episodes = new[]
 		{
@@ -324,7 +323,7 @@ public class TelegramBotHelperTests
 			new AnimeWeekEpisodeInfo("2", "Anime B", 1, null, weekStart.AddDays(1)),
 		};
 
-		var result = TelegramBotHelper.BuildWeekDayReplies(episodes);
+		var result = TelegramBotHelper.BuildWeekDayReplies(episodes, weekStart);
 
 		await Assert.That(result.Count).IsEqualTo(2);
 	}
@@ -332,11 +331,11 @@ public class TelegramBotHelperTests
 	[Test]
 	public async Task BuildWeekDayReplies_WithEpisodeOutsideCurrentWeek_ReturnsEmptyList()
 	{
-		// A date far in the past, not in the current week
+		var weekStart = new DateOnly(2025, 1, 6);
 		var pastDate = new DateOnly(2020, 1, 1);
 		var episode = new AnimeWeekEpisodeInfo("1", "Anime A", 1, null, pastDate);
 
-		var result = TelegramBotHelper.BuildWeekDayReplies([episode]);
+		var result = TelegramBotHelper.BuildWeekDayReplies([episode], weekStart);
 
 		await Assert.That(result.Count).IsEqualTo(0);
 	}
@@ -344,14 +343,14 @@ public class TelegramBotHelperTests
 	[Test]
 	public async Task BuildWeekDayReplies_WithMultipleEpisodesOnSameDay_ReturnsSingleReplyForThatDay()
 	{
-		var today = DateOnly.FromDateTime(DateTime.UtcNow);
+		var weekStart = new DateOnly(2025, 1, 6);
 		var episodes = new[]
 		{
-			new AnimeWeekEpisodeInfo("1", "Anime A", 1, null, today),
-			new AnimeWeekEpisodeInfo("2", "Anime B", 2, null, today),
+			new AnimeWeekEpisodeInfo("1", "Anime A", 1, null, weekStart),
+			new AnimeWeekEpisodeInfo("2", "Anime B", 2, null, weekStart),
 		};
 
-		var result = TelegramBotHelper.BuildWeekDayReplies(episodes);
+		var result = TelegramBotHelper.BuildWeekDayReplies(episodes, weekStart);
 
 		await Assert.That(result.Count).IsEqualTo(1);
 		await Assert.That(result[0]).Contains("Anime A");
