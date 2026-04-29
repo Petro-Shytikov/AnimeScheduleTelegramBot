@@ -86,13 +86,10 @@ public static class TelegramBotHelper
 		return sb.ToString();
 	}
 
-	public static IReadOnlyList<string> BuildWeekDayReplies(IReadOnlyList<AnimeWeekEpisodeInfo> weekSchedule)
+	public static IReadOnlyList<string> BuildWeekDayReplies(IReadOnlyList<AnimeWeekEpisodeInfo> weekSchedule, DateOnly weekStart)
 	{
 		if (weekSchedule.Count == 0)
 			return ["No episodes scheduled for the current week."];
-
-		var currentUtcDate = DateOnly.FromDateTime(DateTime.UtcNow);
-		var weekStart = GetCurrentWeekStart(currentUtcDate);
 
 		var episodesByDate = weekSchedule
 			.OrderBy(item => item.AnimeTitle)
@@ -158,9 +155,4 @@ public static class TelegramBotHelper
 		return sb.ToString();
 	}
 
-	private static DateOnly GetCurrentWeekStart(DateOnly utcDate)
-	{
-		var dayOffset = ((int)utcDate.DayOfWeek + 6) % 7;
-		return utcDate.AddDays(-dayOffset);
-	}
 }

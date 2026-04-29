@@ -65,8 +65,12 @@ public sealed class TelegramController : ControllerBase
 	private async Task<IActionResult> SendWeekMessageAsync(Update update, CancellationToken cancellationToken)
 	{
 		var chatId = update.Message!.Chat!.Id;
-		var weekSchedule = await _animeProvider.GetCurrentWeekScheduleAsync(cancellationToken);
-		var messages = TelegramBotHelper.BuildWeekDayReplies(weekSchedule);
+		var utcToday = DateOnly.FromDateTime(DateTime.UtcNow);
+		var weekRange = CommonHelper.GetCurrentWeekRange(utcToday);
+		var weekStartDay = weekRange.Start;
+		var weekEndDay = weekRange.End;
+		var weekSchedule = await _animeProvider.GetCurrentWeekScheduleAsync(weekStartDay, weekEndDay, cancellationToken);
+		var messages = TelegramBotHelper.BuildWeekDayReplies(weekSchedule, weekStartDay);
 
 		foreach (var message in messages)
 		{
