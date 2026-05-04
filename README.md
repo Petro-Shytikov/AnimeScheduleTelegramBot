@@ -120,3 +120,27 @@ docker run --rm -p 8080:8080 \
 	-e TELEGRAM_WEBHOOK_SECRET_TOKEN="<your_webhook_secret_token>" \
 	anime-schedule-telegram-bot
 ```
+
+## Deploy To Azure Container Registry (ACR)
+
+Workflow file:
+- `.github/workflows/deploy-acr.yml`
+
+The workflow is triggered on pushed tags:
+- `v*`
+- `deploy`
+
+Deployment runs only when both tags exist on the same commit:
+- a semantic version tag, for example `v1.2.3`
+- the `deploy` tag
+
+Required GitHub repository secrets:
+- `ACR_LOGIN_SERVER` (example: `myregistry.azurecr.io`)
+- `ACR_USERNAME`
+- `ACR_PASSWORD`
+- `ACR_REPOSITORY` (example: `anime-schedule-telegram-bot`)
+
+Published image tags:
+- `<version with v>` (example: `v1.2.3`)
+- `<version without v>` (example: `1.2.3`)
+- `latest`
